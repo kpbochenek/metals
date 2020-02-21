@@ -99,7 +99,7 @@ object WorkspaceSymbolQuery {
   def isRelevantKind(kind: Kind): Boolean = {
     kind match {
       case Kind.OBJECT | Kind.PACKAGE_OBJECT | Kind.CLASS | Kind.TRAIT |
-          Kind.INTERFACE =>
+          Kind.INTERFACE | Kind.TYPE =>
         true
       case _ =>
         false

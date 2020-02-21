@@ -206,6 +206,11 @@ class ScalaToplevelMtags(
             case OBJECT => term(name.name, name.pos, k.OBJECT, 0)
           }
           ownerChain = Owner(currentOwner, count) :: ownerChain
+        case TYPE =>
+          acceptTrivia()
+          val name = newIdentifier
+          aliastpe(name.name, name.pos, 0)
+
         case _ =>
       }
     }
