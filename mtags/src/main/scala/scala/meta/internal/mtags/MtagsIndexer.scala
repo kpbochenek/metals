@@ -115,6 +115,9 @@ trait MtagsIndexer {
   def pkg(name: String, pos: m.Position): Unit = {
     addSignature(Descriptor.Package(name), pos, Kind.PACKAGE, 0)
   }
+  def aliastpe(name: String, pos: m.Position, properties: Int): Unit =
+    addSignature(Descriptor.Type(name), pos, Kind.TYPE, properties)
+
   def pkg(ref: Term): Unit = ref match {
     case Name(name) =>
       currentOwner = symbol(Descriptor.Package(name))
