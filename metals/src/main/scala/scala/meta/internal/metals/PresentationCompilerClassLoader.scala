@@ -1,5 +1,8 @@
 package scala.meta.internal.metals
 
+import java.lang.invoke.MethodHandles
+import java.lang.invoke.MethodType
+
 /**
  * ClassLoader that is used to reflectively invoke presentation compiler APIs.
  *
@@ -9,7 +12,7 @@ package scala.meta.internal.metals
  * method signatures of the `PresentationCompiler` class.
  */
 class PresentationCompilerClassLoader(parent: ClassLoader)
-    extends ClassLoader(null) {
+    extends ClassLoader(PresentationCompilerClassLoader.bootClassLoader) {
   override def findClass(name: String): Class[_] = {
     val isShared =
       name.startsWith("org.eclipse.lsp4j") ||
@@ -18,7 +21,29 @@ class PresentationCompilerClassLoader(parent: ClassLoader)
     if (isShared) {
       parent.loadClass(name)
     } else {
-      throw new ClassNotFoundException(name)
+      super.findClass(name)
+    }
+  }
+}
+
+object PresentationCompilerClassLoader {
+  // based on https://github.com/scala/scala/pull/6098
+  private val bootClassLoader: ClassLoader = {
+    if (!util.Properties.isJavaAtLeast("9")) {
+      null
+    } else {
+      try MethodHandles
+        .lookup()
+        .findStatic(
+          classOf[ClassLoader],
+          "getPlatformClassLoader",
+          MethodType.methodType(classOf[ClassLoader])
+        )
+        .invoke()
+      catch {
+        case _: Throwable =>
+          null
+      }
     }
   }
 }
