@@ -24,16 +24,18 @@ class BootstrapModifier extends StringModifier {
            |# Make sure to use coursier v1.1.0-M9 or newer.
            |curl -L -o coursier https://git.io/coursier-cli
            |chmod +x coursier
-           |./coursier bootstrap \\
-           |  --java-opt -Xss4m \\
-           |  --java-opt -Xms100m \\
-           |  --java-opt -Dmetals.client=$client \\
-           |  org.scalameta:metals_2.12:${Docs.release.version} \\
-           |  -r bintray:scalacenter/releases \\
-           |  -r sonatype:snapshots \\
-           |  -o /usr/local/bin/$binary -f
+           |./coursier install $binary --install-dir /usr/local/bin/
+           |
+           |# Updating a binary to newest version
+           |./coursier update $binary
            |```
+           |
            |Make sure the generated `$binary` binary is available on your `$$PATH`.
+           |
+           |Default memory settings are '-Xms100m' '-Xss4m' but you can override them
+           |using '$$JAVA_OPTS'
+           |
+           |You can check version of your binary by executing `$binary -version`.
            |
            |Configure the system properties `-Dhttps.proxyHost=… -Dhttps.proxyPort=…`
            |if you are behind an HTTP proxy.

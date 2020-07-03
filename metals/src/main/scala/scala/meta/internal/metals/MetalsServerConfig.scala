@@ -109,9 +109,10 @@ object MetalsServerConfig {
       case None => default
     }
 
+  val metalsClientType: String = System.getProperty("metals.client", "default")
   def base: MetalsServerConfig = MetalsServerConfig()
   def default: MetalsServerConfig = {
-    System.getProperty("metals.client", "default") match {
+    metalsClientType match {
       case "vscode" =>
         base.copy(
           icons = Icons.vscode,
