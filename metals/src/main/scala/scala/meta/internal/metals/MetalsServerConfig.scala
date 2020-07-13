@@ -11,8 +11,6 @@ import scala.meta.pc.PresentationCompilerConfig.OverrideDefFormat
  * @param bloopProtocol the protocol to communicate with Bloop.
  * @param fileWatcher whether to start an embedded file watcher in case the editor
  *                    does not support file watching.
- * @param statusBar how to handle metals/status notifications.
- * @param doctorFormat the format that you'd like doctor to return
  * @param slowTask how to handle metals/slowTask requests.
  * @param snippetAutoIndent if the client defaults to adding the identation of the reference
  *                          line that the operation started on (relevant for multiline textEdits)
@@ -23,9 +21,7 @@ import scala.meta.pc.PresentationCompilerConfig.OverrideDefFormat
  */
 final case class MetalsServerConfig(
     globSyntax: GlobSyntaxConfig = GlobSyntaxConfig.default,
-    statusBar: StatusBarConfig = StatusBarConfig.default,
     slowTask: SlowTaskConfig = SlowTaskConfig.default,
-    doctorFormat: DoctorFormatConfig = DoctorFormatConfig.default,
     executeClientCommand: ExecuteClientCommandConfig =
       ExecuteClientCommandConfig.default,
     snippetAutoIndent: Boolean = MetalsServerConfig.binaryOption(
@@ -81,7 +77,6 @@ final case class MetalsServerConfig(
   override def toString: String =
     List[String](
       s"glob-syntax=$globSyntax",
-      s"status-bar=$statusBar",
       s"open-files-on-rename=$openFilesOnRenames",
       s"rename-file-threshold=$renameFileThreshold",
       s"slow-task=$slowTask",
@@ -91,8 +86,7 @@ final case class MetalsServerConfig(
       s"input-box=$isInputBoxEnabled",
       s"ask-to-reconnect=$askToReconnect",
       s"icons=$icons",
-      s"statistics=$statistics",
-      s"doctor-format=$doctorFormat"
+      s"statistics=$statistics"
     ).mkString("MetalsServerConfig(\n  ", ",\n  ", "\n)")
 }
 object MetalsServerConfig {
@@ -129,8 +123,6 @@ object MetalsServerConfig {
         )
       case "vim-lsc" =>
         base.copy(
-          // window/logMessage output is always visible and non-invasive in vim-lsc
-          statusBar = StatusBarConfig.logMessage,
           isHttpEnabled = true,
           icons = Icons.unicode,
           compilers = base.compilers.copy(
@@ -139,7 +131,6 @@ object MetalsServerConfig {
         )
       case "coc.nvim" =>
         base.copy(
-          statusBar = StatusBarConfig.showMessage,
           isHttpEnabled = true,
           compilers = base.compilers.copy(
             _parameterHintsCommand =
@@ -162,7 +153,6 @@ object MetalsServerConfig {
       case "sublime" =>
         base.copy(
           isHttpEnabled = true,
-          statusBar = StatusBarConfig.showMessage,
           icons = Icons.unicode,
           isExitOnShutdown = true,
           compilers = base.compilers.copy(

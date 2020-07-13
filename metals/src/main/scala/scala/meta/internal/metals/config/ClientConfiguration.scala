@@ -1,5 +1,7 @@
 package scala.meta.internal.metals
 
+import scala.meta.internal.metals.config.DoctorFormat
+
 /**
  * This class provides a uniform way to know how the client is configured
  * using a combination of server properties, `clientExperimentalCapabilities`
@@ -61,10 +63,14 @@ class ClientConfiguration(
       initialConfig.openFilesOnRenames
     )
 
-  def doctorFormatIsJson(): Boolean =
-    initializationOptions.doctorFormatIsJson ||
-      experimentalCapabilities.doctorFormatIsJson ||
-      initialConfig.doctorFormat.isJson
+  def doctorFormat(): DoctorFormat.DoctorFormat =
+    extract(
+      initializationOptions.doctorFormat,
+      experimentalCapabilities.doctorFormat,
+      Option(System.getProperty("metals.doctor-format"))
+        .flatMap(DoctorFormat.fromString)
+        .getOrElse(DoctorFormat.Html)
+    )
 
   def isHttpEnabled(): Boolean =
     initializationOptions.isHttpEnabled.getOrElse(initialConfig.isHttpEnabled)
