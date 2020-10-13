@@ -42,7 +42,7 @@ object ServerCommands {
     "Restart build server",
     """Unconditionally stop the current running Bloop server and start a new one using Bloop launcher"""
   )
-
+  
   val ScanWorkspaceSources = new Command(
     "sources-scan",
     "Scan sources",
@@ -92,6 +92,12 @@ object ServerCommands {
     "compile-cancel",
     "Cancel compilation",
     """Cancel the currently ongoing compilation, if any."""
+  )
+
+  val InstallSbtBsp = new Command(
+    "sbt-bsp-install",
+    "???",
+    "???"
   )
 
   val BspSwitch = new Command(
@@ -355,6 +361,7 @@ object ServerCommands {
       CancelCompile,
       CleanCompile,
       BspSwitch,
+      InstallSbtBsp,
       StartDebugAdapter,
       GotoSymbol,
       GotoPosition,

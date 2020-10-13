@@ -70,6 +70,7 @@ import org.eclipse.lsp4j.jsonrpc.messages.{Either => JEither}
 import org.eclipse.lsp4j.jsonrpc.services.JsonNotification
 import org.eclipse.lsp4j.jsonrpc.services.JsonRequest
 import org.eclipse.{lsp4j => l}
+import scala.meta.internal.builds.SbtInstall
 
 class MetalsLanguageServer(
     ec: ExecutionContextExecutorService,
@@ -187,6 +188,7 @@ class MetalsLanguageServer(
   private var semanticdbs: Semanticdbs = _
   private var buildClient: ForwardingMetalsBuildClient = _
   private var bloopServers: BloopServers = _
+  private var sbtInstall: SbtInstall = _
   private var bspServers: BspServers = _
   private var bspConnector: BspConnector = _
   private var codeLensProvider: CodeLensProvider = _
@@ -358,9 +360,23 @@ class MetalsLanguageServer(
       bspGlobalDirectories,
       clientConfig.initialConfig
     )
+    sbtInstall = new SbtInstall(
+      workspace,
+      buildTools,
+      bspServers,
+      shellRunner,
+      tables,
+      () => userConfig,
+      () => disconnectOldBuildServer(),
+      session => connectToNewBuildServer(session).map(_ => ())
+    )
     bspConnector = new BspConnector(
       bloopServers,
-      bspServers
+      bspServers,
+      buildTools,
+      languageClient,
+      tables,
+      () => userConfig,
     )
     semanticdbs = AggregateSemanticdbs(
       List(
@@ -531,7 +547,7 @@ class MetalsLanguageServer(
       buildTargets,
       languageClient,
       () => bspSession.map(_.mainConnection.name),
-      () => bspConnector.resolve(buildTools),
+      () => bspConnector.resolve(),
       () => httpServer,
       tables,
       clientConfig
@@ -1363,6 +1379,9 @@ class MetalsLanguageServer(
       case ServerCommands.RestartBuildServer() =>
         bloopServers.shutdownServer()
         autoConnectToBuildServer().asJavaObject
+      case ServerCommands.InstallSbtBsp() =>
+        sbtInstall.connect().asJavaObject
+        // autoConnectToBuildServer
       case ServerCommands.ImportBuild() =>
         slowConnectToBuildServer(forceImport = true).asJavaObject
       case ServerCommands.ConnectBuildServer() =>
@@ -1375,7 +1394,7 @@ class MetalsLanguageServer(
         }.asJavaObject
       case ServerCommands.BspSwitch() =>
         (for {
-          isSwitched <- bspServers.switchBuildServer()
+          isSwitched <- bspConnector.switchBuildServer()
           _ <- {
             if (isSwitched) quickConnectToBuildServer()
             else Future.successful(())
@@ -1697,7 +1716,7 @@ class MetalsLanguageServer(
       for {
         _ <- disconnectOldBuildServer()
         maybeSession <- timed("connected to build server") {
-          bspConnector.connect(workspace, userConfig, buildTools)
+          bspConnector.connect(workspace, userConfig)
         }
         result <- maybeSession match {
           case Some(session) =>
@@ -1734,6 +1753,8 @@ class MetalsLanguageServer(
     if (bspSession.isDefined) {
       scribe.info("disconnected: build server")
     }
+    sbtInstall.disconnect()
+
     bspSession match {
       case None => Future.successful(())
       case Some(value) =>
